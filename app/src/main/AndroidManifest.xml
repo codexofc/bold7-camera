@@ -64,6 +64,16 @@
                 <action android:name="android.media.action.VIDEO_CAPTURE" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
+            <!-- FIDO / WebAuthn deep link filter -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="fido" />
+                <data android:scheme="fido-cross-device" />
+                <data android:scheme="webauthn" />
+            </intent-filter>
         </activity>
 
         <!-- QR code to clipboard, for other apps such as the BenOS keyboard. Own task so that

@@ -94,6 +94,7 @@ open class MainActivity : AppCompatActivity() {
 
         setupSecureWindowFlags()
         adjustUiForIntent()
+        handleFidoIntent(intent)
 
         loadSettings()
         setupOrientationListener()
@@ -169,6 +170,30 @@ open class MainActivity : AppCompatActivity() {
             clipboard.setPrimaryClip(clip)
             Toast.makeText(this, R.string.qr_copied_to_clipboard, Toast.LENGTH_SHORT).show()
             finish()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleFidoIntent(intent)
+    }
+
+    private fun handleFidoIntent(intent: Intent?) {
+        val uri = intent?.data ?: return
+        val uriString = uri.toString()
+        if (LinkUtils.isFidoLink(uriString)) {
+            if (qrToClipboardMode) {
+                copyToClipboardAndFinish(uriString)
+            } else {
+                try {
+                    val viewIntent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(viewIntent)
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Failed to open FIDO link: $uriString", e)
+                    Toast.makeText(this, getString(R.string.no_app_to_open_url), Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -958,23 +983,26 @@ open class MainActivity : AppCompatActivity() {
                             break
                         }
 
-                        if (barcode.valueType == Barcode.TYPE_URL) {
-                            val url = barcode.url?.url
-                            if (url != null) {
-                                qrScannerEnabled = false
-                                runOnUiThread {
-                                    updateQrIcon()
-                                    camera?.cameraControl?.setZoomRatio(1f)
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                        startActivity(intent)
-                                    } catch (e: Exception) {
-                                        Log.e("MainActivity", "Failed to open URL: $url", e)
-                                        Toast.makeText(this, getString(R.string.no_app_to_open_url), Toast.LENGTH_SHORT).show()
-                                    }
+                        val urlToOpen = when {
+                            barcode.valueType == Barcode.TYPE_URL -> barcode.url?.url ?: rawValue
+                            LinkUtils.isUrlOrFidoLink(rawValue) -> rawValue.trim()
+                            else -> null
+                        }
+
+                        if (urlToOpen != null) {
+                            qrScannerEnabled = false
+                            runOnUiThread {
+                                updateQrIcon()
+                                camera?.cameraControl?.setZoomRatio(1f)
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
+                                    startActivity(intent)
+                                } catch (e: Exception) {
+                                    Log.e("MainActivity", "Failed to open URL: $urlToOpen", e)
+                                    Toast.makeText(this, getString(R.string.no_app_to_open_url), Toast.LENGTH_SHORT).show()
                                 }
-                                break
                             }
+                            break
                         }
 
                         runOnUiThread {
