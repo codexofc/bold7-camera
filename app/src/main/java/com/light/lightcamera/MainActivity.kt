@@ -584,11 +584,30 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun openGallery() {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.type = "image/*"
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val defaultGalleryApp = sharedPrefs.getString("default_gallery_app", "system_default")
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            type = "image/*"
+        }
+
+        if (!defaultGalleryApp.isNullOrEmpty() && defaultGalleryApp != "system_default") {
+            intent.setPackage(defaultGalleryApp)
+        }
+
         try {
             startActivity(intent)
         } catch (e: Exception) {
+            if (!defaultGalleryApp.isNullOrEmpty() && defaultGalleryApp != "system_default") {
+                try {
+                    val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
+                        type = "image/*"
+                    }
+                    startActivity(fallbackIntent)
+                    return
+                } catch (_: Exception) {
+                }
+            }
             Toast.makeText(this, getString(R.string.no_app_to_open_photo), Toast.LENGTH_SHORT).show()
         }
     }
@@ -623,7 +642,7 @@ open class MainActivity : AppCompatActivity() {
             return
         }
 
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
+        val name = FilenameUtils.getFormattedFilename(this, prefix = "IMG_")
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
@@ -693,7 +712,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun saveToMediaStoreAndFinish(imageCapture: ImageCapture, targetUri: Uri) {
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
+        val name = FilenameUtils.getFormattedFilename(this, prefix = "IMG_")
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
@@ -878,7 +897,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun createDefaultMediaStoreVideoOptions(): MediaStoreOutputOptions {
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(System.currentTimeMillis())
+        val name = FilenameUtils.getFormattedFilename(this, prefix = "VID_")
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
@@ -1117,7 +1136,6 @@ open class MainActivity : AppCompatActivity() {
         private const val KEY_TAP_TO_TAKE_PHOTO = "tap_to_take_photo"
         private const val KEY_AUTO_ZOOM = "auto_zoom"
         private const val KEY_STORAGE_LOCATION = "storage_location"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = mutableListOf(
             Manifest.permission.CAMERA,

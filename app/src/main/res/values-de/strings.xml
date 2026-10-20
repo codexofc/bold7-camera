@@ -178,4 +178,13 @@
         <item>3</item>
         <item>5</item>
     </string-array>
+
+    <string name="default_gallery_app_title">Standard-Galerie-App</string>
+    <string name="default_gallery_app_summary">Wählen Sie die zu öffnende Galerie-App</string>
+    <string name="system_default">Systemstandard</string>
+
+    <!-- Date and Time Format Strings -->
+    <string name="filename_date_format_title">Dateinamens-Datumsformat</string>
+    <string name="filename_date_format_summary">Datums- und Zeitformat für gespeicherte Dateien wählen</string>
+    <string name="no_custom_preset">Keine benutzerdefinierte Voreinstellung (Standard)</string>
 </resources>

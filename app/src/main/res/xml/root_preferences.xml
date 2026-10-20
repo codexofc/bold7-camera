@@ -36,6 +36,23 @@
             app:summary="@string/storage_location_summary"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            app:defaultValue="system_default"
+            app:icon="@drawable/ic_gallery"
+            app:key="default_gallery_app"
+            app:title="@string/default_gallery_app_title"
+            app:summary="@string/default_gallery_app_summary"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="default"
+            app:entries="@array/date_format_entries"
+            app:entryValues="@array/date_format_values"
+            app:icon="@drawable/ic_settings"
+            app:key="filename_date_format"
+            app:title="@string/filename_date_format_title"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/category_screen_recorder">

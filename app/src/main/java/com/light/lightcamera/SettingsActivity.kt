@@ -1,13 +1,16 @@
 package com.light.lightcamera
 
-import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
@@ -38,6 +41,10 @@ class SettingsActivity : AppCompatActivity() {
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
+
+            findPreference<ListPreference>("default_gallery_app")?.let { pref ->
+                setupGalleryPreference(pref)
+            }
 
             findPreference<Preference>("button_color")?.setOnPreferenceClickListener {
                 showColorPickerDialog()
@@ -149,6 +156,74 @@ class SettingsActivity : AppCompatActivity() {
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
         }
+
+        private fun setupGalleryPreference(preference: ListPreference) {
+            val pm = requireContext().packageManager
+            val entries = mutableListOf<CharSequence>()
+            val entryValues = mutableListOf<CharSequence>()
+
+            entries.add(getString(R.string.system_default))
+            entryValues.add("system_default")
+
+            val galleryApps = mutableMapOf<String, String>()
+
+            val intentView = Intent(Intent.ACTION_VIEW).apply {
+                type = "image/*"
+            }
+            val resolveInfosView = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.queryIntentActivities(
+                    intentView,
+                    PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                pm.queryIntentActivities(intentView, PackageManager.MATCH_DEFAULT_ONLY)
+            }
+
+            for (info in resolveInfosView) {
+                val packageName = info.activityInfo.packageName
+                if (packageName != requireContext().packageName) {
+                    val label = info.loadLabel(pm).toString()
+                    galleryApps[packageName] = label
+                }
+            }
+
+            val intentGallery = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_APP_GALLERY)
+            }
+            val resolveInfosGallery = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.queryIntentActivities(
+                    intentGallery,
+                    PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                pm.queryIntentActivities(intentGallery, PackageManager.MATCH_DEFAULT_ONLY)
+            }
+
+            for (info in resolveInfosGallery) {
+                val packageName = info.activityInfo.packageName
+                if (packageName != requireContext().packageName && !galleryApps.containsKey(packageName)) {
+                    val label = info.loadLabel(pm).toString()
+                    galleryApps[packageName] = label
+                }
+            }
+
+            val sortedApps = galleryApps.entries.sortedBy { it.value.lowercase() }
+            for (app in sortedApps) {
+                entries.add(app.value)
+                entryValues.add(app.key)
+            }
+
+            preference.entries = entries.toTypedArray()
+            preference.entryValues = entryValues.toTypedArray()
+
+            if (preference.value == null || !entryValues.contains(preference.value)) {
+                preference.value = "system_default"
+            }
+        }
+
+
 
         private fun saveButtonColor(color: Int) {
             val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())

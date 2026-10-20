@@ -159,4 +159,13 @@
         <item>3</item>
         <item>5</item>
     </string-array>
+
+    <string name="default_gallery_app_title">Standaard gallerij-app</string>
+    <string name="default_gallery_app_summary">Kies welke gallerij-app te openen</string>
+    <string name="system_default">Systeemstandaard</string>
+
+    <!-- Date and Time Format Strings -->
+    <string name="filename_date_format_title">Bestands datum- &amp; tijdindeling</string>
+    <string name="filename_date_format_summary">Kies datum- en tijdindeling voor opgeslagen bestanden</string>
+    <string name="no_custom_preset">Geen aangepaste instelling (Standaard)</string>
 </resources>

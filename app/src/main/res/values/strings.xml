@@ -181,4 +181,37 @@
     </string-array>
     <string name="qr_copied_to_clipboard">Copied to clipboard</string>
     <string name="qr_clip_label">QR code</string>
+
+    <string name="default_gallery_app_title">Default Gallery App</string>
+    <string name="default_gallery_app_summary">Choose which gallery app to open</string>
+    <string name="system_default">System Default</string>
+
+    <!-- Date and Time Format Strings -->
+    <string name="filename_date_format_title">File Date &amp; Time Format</string>
+    <string name="filename_date_format_summary">Choose date and time format for saved files</string>
+    <string name="no_custom_preset">No custom preset (Default)</string>
+
+    <string-array name="date_format_entries">
+        <item>@string/no_custom_preset</item>
+        <item>MM-dd-yyyy-HH-mm-ss</item>
+        <item>MM_dd_yyyy_HH-mm-ss</item>
+        <item>MM.dd.yyyy.HH.mm.ss</item>
+        <item>dd-MM-yyyy-HH-mm-ss</item>
+        <item>dd_MM_yyyy_HH-mm-ss</item>
+        <item>dd.MM.yyyy.HH.mm.ss</item>
+        <item>yyyymmdd_hhmmss</item>
+        <item>yyyy_MM_dd_HH_mm_ss_SSS</item>
+    </string-array>
+
+    <string-array name="date_format_values">
+        <item>default</item>
+        <item>MM-dd-yyyy-HH-mm-ss</item>
+        <item>MM_dd_yyyy_HH-mm-ss</item>
+        <item>MM.dd.yyyy.HH.mm.ss</item>
+        <item>dd-MM-yyyy-HH-mm-ss</item>
+        <item>dd_MM_yyyy_HH-mm-ss</item>
+        <item>dd.MM.yyyy.HH.mm.ss</item>
+        <item>yyyymmdd_hhmmss</item>
+        <item>yyyy_MM_dd_HH_mm_ss_SSS</item>
+    </string-array>
 </resources>
