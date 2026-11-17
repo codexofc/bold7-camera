@@ -24,3 +24,6 @@ own after v3.6 (git log v3.6..):
   of the Q25's screen, shown pixel for pixel, instead of 640x480 enlarged 1.5 times;
 - the first press of Enter or of the trackpad after touching the screen shoots: no view of the
   camera takes the focus any more, which swallowed that press;
+- full screen: the camera hides the system bars (a swipe from the edge shows them for a moment),
+  so that nothing lies under Android 17's status bar, and the settings and about screens stay
+  below it;

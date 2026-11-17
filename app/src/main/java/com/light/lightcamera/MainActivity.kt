@@ -31,6 +31,9 @@ import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -97,6 +100,14 @@ open class MainActivity : AppCompatActivity() {
         // after a touch, which takes Android out of touch mode, gives the focus to a button (an
         // ImageButton is always focusable) and is swallowed doing so.
         viewBinding.root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+        // Full screen, as on Android 17, where the window is edge to edge whatever the app asks:
+        // the system bars hide, a swipe from the edge shows them for a moment, and nothing of the
+        // camera lies under them.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).run {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
 
         if (isCaptureIntent()) {
             setResult(RESULT_CANCELED)
