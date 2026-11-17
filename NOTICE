@@ -17,3 +17,6 @@ own after v3.6 (git log v3.6..):
   beside the original BenOS Camera without replacing it;
 - no network request: the update check against api.github.com, at each start and from the
   settings, is removed with the INTERNET permission;
+- focus: the video use case is bound only while filming, so that the photo keeps CameraX's
+  continuous picture autofocus; before each photo the lens focuses on the centre, or on the point
+  last touched (touch to focus, new); the trackpad's click and Enter focus, then shoot;

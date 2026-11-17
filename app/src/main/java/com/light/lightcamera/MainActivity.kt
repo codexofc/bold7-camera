@@ -43,6 +43,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 open class MainActivity : AppCompatActivity() {
     // True for the QR-to-clipboard entry point (QrToClipboardActivity). In that mode the first
@@ -67,6 +68,12 @@ open class MainActivity : AppCompatActivity() {
     private var screenAspectRatio = AspectRatio.RATIO_4_3
     private var lastPhotoTime = 0L
     private var isZoomSeekBarTouching = false
+    // VideoCapture is bound only while filming: bound beside the photo, it turns CameraX to its
+    // recording template, whose continuous video autofocus is slow on the Q25 and never settles
+    // before a photo.
+    private var videoMode = false
+    // Where the photo is focused: the point last touched, the centre when null.
+    private var focusPoint: MeteringPoint? = null
 
     private var orientationEventListener: OrientationEventListener? = null
     private var currentRotationDegrees = 0
@@ -95,6 +102,7 @@ open class MainActivity : AppCompatActivity() {
         handleFidoIntent(intent)
 
         loadSettings()
+        videoMode = isVideoCaptureIntent()
         setupOrientationListener()
 
         // Request camera permissions
@@ -460,7 +468,10 @@ open class MainActivity : AppCompatActivity() {
                     takePhoto()
                     return true
                 }
-                return false
+                val point = viewBinding.viewFinder.meteringPointFactory.createPoint(e.x, e.y)
+                focusPoint = point
+                focusAt(point)
+                return true
             }
         })
 
@@ -586,7 +597,38 @@ open class MainActivity : AppCompatActivity() {
         lastPhotoTime = currentTime
 
         val imageCapture = imageCapture ?: return
+        if (videoMode) {
+            capturePhoto(imageCapture)
+            return
+        }
+        val point = focusPoint ?: SurfaceOrientedMeteringPointFactory(1f, 1f).createPoint(.5f, .5f)
+        focusAt(point) { capturePhoto(imageCapture) }
+    }
 
+    // Focuses on point, then runs then once the lens has settled, or after 3 s whatever happened
+    // (a full sweep in the dark takes 2.3 s on the Q25); a camera without autofocus (the Q25's
+    // front one) runs it at once. The lens stays there 5 s, then goes back to continuous autofocus.
+    private fun focusAt(point: MeteringPoint, then: () -> Unit = {}) {
+        val camera = camera
+        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+            .setAutoCancelDuration(5, TimeUnit.SECONDS)
+            .build()
+        if (camera == null || !camera.cameraInfo.isFocusMeteringSupported(action)) {
+            then()
+            return
+        }
+        var done = false
+        val once = Runnable { if (!done) { done = true; then() } }
+        val future = camera.cameraControl.startFocusAndMetering(action)
+        future.addListener({
+            val focused = try { future.get().isFocusSuccessful.toString() } catch (e: Exception) { "cancelled" }
+            Log.d("MainActivity", "Focus: $focused")
+            once.run()
+        }, ContextCompat.getMainExecutor(this))
+        viewBinding.root.postDelayed(once, 3000)
+    }
+
+    private fun capturePhoto(imageCapture: ImageCapture) {
         // Shutter effect
         viewBinding.shutterEffectView.visibility = View.VISIBLE
         viewBinding.shutterEffectView.animate()
@@ -757,6 +799,12 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun captureVideo() {
+        if (!videoMode) {
+            videoMode = true
+            viewBinding.videoCaptureButton.isEnabled = false
+            startCamera { captureVideo() }
+            return
+        }
         val videoCapture = this.videoCapture ?: return
 
         viewBinding.videoCaptureButton.isEnabled = false
@@ -850,6 +898,10 @@ open class MainActivity : AppCompatActivity() {
                         }
                         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         camera?.cameraControl?.enableTorch(false)
+                        if (!isVideoCaptureIntent()) {
+                            videoMode = false
+                            startCamera()
+                        }
                         viewBinding.videoCaptureButton.apply {
                             setImageResource(R.drawable.ic_videocam)
                             val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
@@ -885,7 +937,7 @@ open class MainActivity : AppCompatActivity() {
             .build()
     }
 
-    private fun startCamera() {
+    private fun startCamera(onBound: () -> Unit = {}) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
@@ -898,10 +950,14 @@ open class MainActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-            val recorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
-                .build()
-            videoCapture = VideoCapture.withOutput(recorder)
+            videoCapture = if (videoMode) {
+                val recorder = Recorder.Builder()
+                    .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+                    .build()
+                VideoCapture.withOutput(recorder)
+            } else {
+                null
+            }
 
             val initialRotation = when (currentRotationDegrees) {
                 90 -> Surface.ROTATION_270
@@ -934,8 +990,10 @@ open class MainActivity : AppCompatActivity() {
             try {
                 cameraProvider.unbindAll()
                 camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture, videoCapture, imageAnalyzer
+                    this, cameraSelector,
+                    *listOfNotNull(preview, imageCapture, videoCapture, imageAnalyzer).toTypedArray()
                 )
+                focusPoint = null
 
                 camera?.cameraInfo?.zoomState?.observe(this) { zoomState ->
                     if (!isZoomSeekBarTouching) {
@@ -943,6 +1001,7 @@ open class MainActivity : AppCompatActivity() {
                     }
                 }
                 viewBinding.zoomSeekBar.visibility = View.VISIBLE
+                onBound()
             } catch (exc: Exception) {
                 Log.e("MainActivity", "Use case binding failed", exc)
             }
