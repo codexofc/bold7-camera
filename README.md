@@ -19,3 +19,9 @@ You can also use the tool [Obtainium](https://github.com/ImranR98/Obtainium) or 
 
 
 
+
+## Bold7 Camera
+
+This repository is a fork of BenOS Camera for Bold7, a BlackBerry OS 7.1 interface for the Zinwa
+Q25 under LineageOS 24. What I changed, and from which commit of the original, is in
+[NOTICE](NOTICE). The license stays the GPL-3.0.

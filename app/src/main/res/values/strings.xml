@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BenOS Camera</string>
+    <string name="app_name">Camera</string>
     <string name="take_photo">Photo</string>
     <string name="record_video">Record</string>
     <string name="stop_video">Stop</string>

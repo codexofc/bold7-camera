@@ -1,0 +1,17 @@
+Bold7 Camera
+============
+
+This program is a modified version of BenOS Camera, written by Rudi Timmermans
+(https://github.com/ruditimmermans/BenOSCamera), taken at the tag v3.6, commit
+3f0d633d672506ba8e81979b6b448179780ba97c. The whole history and authorship of the original
+are kept in this repository.
+
+Like the original, it is free software under the GNU General Public License, version 3
+(LICENSE). It comes with no warranty.
+
+I, Arthur Michon (codexofc on GitHub), changed it from 17 November 2026 for Bold7, a BlackBerry
+OS 7.1 interface for the Zinwa Q25 under LineageOS 24 (Android 17). Each change is a commit of its
+own after v3.6 (git log v3.6..):
+
+- the package is dev.bold7.camera.benos and Android's label is "Camera", so that it installs
+  beside the original BenOS Camera without replacing it;

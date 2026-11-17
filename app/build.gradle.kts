@@ -1,4 +1,4 @@
-val appVersionName = "3.6"
+val appVersionName = "3.6-bold7.1"
 
 plugins {
     alias(libs.plugins.android.application)
@@ -6,7 +6,7 @@ plugins {
 }
 
 base {
-    archivesName = "BenOSCamera-v$appVersionName"
+    archivesName = "Bold7Camera-v$appVersionName"
 }
 
 android {
@@ -14,7 +14,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.light.lightcamera"
+        applicationId = "dev.bold7.camera.benos"
         minSdk = 26
         targetSdk = 37
         versionCode = 27

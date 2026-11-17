@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Caméra BenOS</string>
     <string name="take_photo">Photo</string>
     <string name="record_video">Enregistrer</string>
     <string name="stop_video">Arrêt</string>
