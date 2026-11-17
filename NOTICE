@@ -15,3 +15,5 @@ own after v3.6 (git log v3.6..):
 
 - the package is dev.bold7.camera.benos and Android's label is "Camera", so that it installs
   beside the original BenOS Camera without replacing it;
+- no network request: the update check against api.github.com, at each start and from the
+  settings, is removed with the INTERNET permission;

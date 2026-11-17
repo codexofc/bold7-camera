@@ -30,7 +30,6 @@ import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -40,7 +39,6 @@ import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.light.lightcamera.databinding.ActivityMainBinding
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -141,8 +139,6 @@ open class MainActivity : AppCompatActivity() {
 
         if (qrToClipboardMode) {
             setupQrToClipboardMode()
-        } else {
-            checkForUpdates()
         }
     }
 
@@ -246,35 +242,6 @@ open class MainActivity : AppCompatActivity() {
     private fun getExtraOutputUri(): Uri? {
         val intent = intent ?: return null
         return IntentCompat.getParcelableExtra(intent, MediaStore.EXTRA_OUTPUT, Uri::class.java)
-    }
-
-    private fun checkForUpdates() {
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!sharedPrefs.getBoolean("auto_check_updates", true)) return
-
-        val updateManager = UpdateManager(this)
-        lifecycleScope.launch {
-            val result = updateManager.checkForUpdates()
-            if (result is UpdateManager.UpdateResult.NewVersionAvailable) {
-                val dialog = MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle(R.string.check_for_updates)
-                    .setMessage(getString(R.string.update_available, result.version))
-                    .setPositiveButton(R.string.download_update) { _, _ ->
-                        updateManager.downloadAndInstallUpdate(result.downloadUrl, result.version)
-                    }
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create()
-
-                dialog.window?.let { window ->
-                    window.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
-                    val layoutParams = window.attributes
-                    layoutParams.y = (32 * resources.displayMetrics.density).toInt()
-                    window.attributes = layoutParams
-                }
-
-                dialog.show()
-            }
-        }
     }
 
     override fun onResume() {

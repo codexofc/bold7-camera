@@ -110,16 +110,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/category_info">
-        <SwitchPreferenceCompat
-            app:defaultValue="true"
-            app:icon="@drawable/ic_update"
-            app:key="auto_check_updates"
-            app:summary="@string/auto_check_updates_summary"
-            app:title="@string/auto_check_updates_title" />
-        <Preference
-            app:icon="@drawable/ic_update"
-            app:key="check_for_updates"
-            app:title="@string/check_for_updates" />
         <Preference
             app:icon="@drawable/ic_info_outline"
             app:key="about"
