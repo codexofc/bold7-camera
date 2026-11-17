@@ -93,6 +93,10 @@ open class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+        // No view takes the focus: the keys only shoot. Otherwise the first Enter or trackpad click
+        // after a touch, which takes Android out of touch mode, gives the focus to a button (an
+        // ImageButton is always focusable) and is swallowed doing so.
+        viewBinding.root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
 
         if (isCaptureIntent()) {
             setResult(RESULT_CANCELED)

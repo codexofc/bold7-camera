@@ -22,3 +22,5 @@ own after v3.6 (git log v3.6..):
   last touched (touch to focus, new); the trackpad's click and Enter focus, then shoot;
 - a sharper viewfinder: with the 4:3 setting the preview stream is a 720x720 square, the size
   of the Q25's screen, shown pixel for pixel, instead of 640x480 enlarged 1.5 times;
+- the first press of Enter or of the trackpad after touching the screen shoots: no view of the
+  camera takes the focus any more, which swallowed that press;
