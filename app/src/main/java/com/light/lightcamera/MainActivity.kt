@@ -24,6 +24,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
@@ -943,8 +944,23 @@ open class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder()
-                .setTargetAspectRatio(screenAspectRatio)
+            val previewBuilder = Preview.Builder()
+            if (!videoMode && screenAspectRatio == AspectRatio.RATIO_4_3) {
+                // The viewfinder fills a square screen with the centre of the 4:3 frame: a 4:3
+                // stream would be 640x480 at most (CameraX keeps a preview within the screen's
+                // area) and shown 1.5 times larger. A square stream the screen's size shows the
+                // same field pixel for pixel. Other sizes follow, in CameraX's order, if the
+                // camera has no such stream.
+                val side = minOf(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels)
+                previewBuilder.setResolutionSelector(
+                    ResolutionSelector.Builder()
+                        .setResolutionFilter { sizes, _ -> sizes.sortedByDescending { it.width == side && it.height == side } }
+                        .build()
+                )
+            } else {
+                previewBuilder.setTargetAspectRatio(screenAspectRatio)
+            }
+            val preview = previewBuilder
                 .build()
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
