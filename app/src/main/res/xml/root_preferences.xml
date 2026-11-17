@@ -19,13 +19,6 @@
             app:title="@string/tap_to_take_photo_title"
             app:summary="@string/tap_to_take_photo_summary" />
 
-        <SwitchPreferenceCompat
-            app:defaultValue="true"
-            app:icon="@drawable/ic_videocam"
-            app:key="auto_zoom"
-            app:title="@string/auto_zoom_title"
-            app:summary="@string/auto_zoom_summary" />
-
         <ListPreference
             app:defaultValue="internal"
             app:entries="@array/storage_locations"

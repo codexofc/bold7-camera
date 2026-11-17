@@ -36,12 +36,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.mlkit.vision.barcode.BarcodeScanner
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
 import com.light.lightcamera.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
 import java.util.*
@@ -62,11 +56,11 @@ open class MainActivity : AppCompatActivity() {
     private var recording: Recording? = null
     private var camera: Camera? = null
     private lateinit var cameraExecutor: ExecutorService
-    private lateinit var barcodeScanner: BarcodeScanner
+    // Used on cameraExecutor only.
+    private val barcodeReader = BarcodeReader()
     private var flashMode = ImageCapture.FLASH_MODE_OFF
     private var qrScannerEnabled = false
     private var tapToTakePhoto = false
-    private var autoZoom = true
     private var storageLocation = "internal"
     private var lensFacing = CameraSelector.LENS_FACING_BACK
     private var screenAspectRatio = AspectRatio.RATIO_4_3
@@ -144,18 +138,6 @@ open class MainActivity : AppCompatActivity() {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        val options = BarcodeScannerOptions.Builder()
-            .setZoomSuggestionOptions(ZoomSuggestionOptions.Builder { zoomRatio ->
-                if (autoZoom) {
-                    camera?.cameraControl?.setZoomRatio(zoomRatio)
-                    true
-                } else {
-                    false
-                }
-            }.build())
-            .enableAllPotentialBarcodes()
-            .build()
-        barcodeScanner = BarcodeScanning.getClient(options)
 
         updateQrIcon()
         updateFlashIcon()
@@ -379,7 +361,6 @@ open class MainActivity : AppCompatActivity() {
         screenAspectRatio = if (ratioValue == 1) AspectRatio.RATIO_16_9 else AspectRatio.RATIO_4_3
 
         tapToTakePhoto = sharedPrefs.getBoolean(KEY_TAP_TO_TAKE_PHOTO, false)
-        autoZoom = sharedPrefs.getBoolean(KEY_AUTO_ZOOM, true)
         storageLocation = sharedPrefs.getString(KEY_STORAGE_LOCATION, "internal") ?: "internal"
 
         lensFacing = sharedPrefs.getInt(KEY_LENS_FACING, CameraSelector.LENS_FACING_BACK)
@@ -1040,60 +1021,40 @@ open class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    @androidx.annotation.OptIn(ExperimentalGetImage::class)
     private fun processImageProxy(imageProxy: ImageProxy) {
         if (!qrScannerEnabled) {
             imageProxy.close()
             return
         }
-        val mediaImage = imageProxy.image
-        if (mediaImage != null) {
-            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-            barcodeScanner.process(image)
-                .addOnSuccessListener { barcodes ->
-                    for (barcode in barcodes) {
-                        val rawValue = barcode.rawValue ?: continue
+        val rawValue = imageProxy.use {
+            val y = it.planes[0]
+            barcodeReader.read(y.buffer, y.rowStride, it.width, it.height, it.imageInfo.rotationDegrees)
+        } ?: return
 
-                        if (qrToClipboardMode) {
-                            copyToClipboardAndFinish(rawValue)
-                            break
-                        }
+        if (qrToClipboardMode) {
+            copyToClipboardAndFinish(rawValue)
+            return
+        }
 
-                        val urlToOpen = when {
-                            barcode.valueType == Barcode.TYPE_URL -> barcode.url?.url ?: rawValue
-                            LinkUtils.isUrlOrFidoLink(rawValue) -> rawValue.trim()
-                            else -> null
-                        }
-
-                        if (urlToOpen != null) {
-                            qrScannerEnabled = false
-                            runOnUiThread {
-                                updateQrIcon()
-                                camera?.cameraControl?.setZoomRatio(1f)
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
-                                    startActivity(intent)
-                                } catch (e: Exception) {
-                                    Log.e("MainActivity", "Failed to open URL: $urlToOpen", e)
-                                    Toast.makeText(this, getString(R.string.no_app_to_open_url), Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                            break
-                        }
-
-                        runOnUiThread {
-                            Toast.makeText(this, getString(R.string.scanned_result, rawValue), Toast.LENGTH_SHORT).show()
-                        }
-                    }
+        if (LinkUtils.isUrlOrFidoLink(rawValue)) {
+            val urlToOpen = rawValue.trim()
+            qrScannerEnabled = false
+            runOnUiThread {
+                updateQrIcon()
+                camera?.cameraControl?.setZoomRatio(1f)
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Failed to open URL: $urlToOpen", e)
+                    Toast.makeText(this, getString(R.string.no_app_to_open_url), Toast.LENGTH_SHORT).show()
                 }
-                .addOnFailureListener {
-                    Log.e("MainActivity", "Barcode scanning failed", it)
-                }
-                .addOnCompleteListener {
-                    imageProxy.close()
-                }
-        } else {
-            imageProxy.close()
+            }
+            return
+        }
+
+        runOnUiThread {
+            Toast.makeText(this, getString(R.string.scanned_result, rawValue), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1191,7 +1152,6 @@ open class MainActivity : AppCompatActivity() {
         private const val KEY_ASPECT_RATIO = "aspect_ratio"
         private const val KEY_BUTTON_COLOR = "button_color"
         private const val KEY_TAP_TO_TAKE_PHOTO = "tap_to_take_photo"
-        private const val KEY_AUTO_ZOOM = "auto_zoom"
         private const val KEY_STORAGE_LOCATION = "storage_location"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = mutableListOf(

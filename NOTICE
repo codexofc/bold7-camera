@@ -27,3 +27,10 @@ own after v3.6 (git log v3.6..):
 - full screen: the camera hides the system bars (a swipe from the edge shows them for a moment),
   so that nothing lies under Android 17's status bar, and the settings and about screens stay
   below it;
+- no proprietary library: the QR and barcode reader is ZXing's (core 3.5.3, Apache License 2.0,
+  https://github.com/zxing/zxing) instead of Google's ML Kit; ML Kit's automatic zoom on a
+  far code goes with it, and its setting.
+
+Third-party libraries in the APK, all under the Apache License 2.0: AndroidX (CameraX, AppCompat,
+Preference, Core, Lifecycle, Media3), Material Components for Android, Kotlin and its coroutines,
+ZXing.
