@@ -63,7 +63,6 @@
     <string name="no_app_to_open_photo">Geen app gevonden om foto te openen</string>
     <string name="no_app_to_open_video">Geen app gevonden om video te openen</string>
     <string name="no_app_to_open_url">Geen app gevonden om URL te openen</string>
-    <string name="photo_captured">Foto gemaakt om %1$s</string>
 
     <string name="check_for_updates">Controleren op updates</string>
     <string name="checking_updates">Controleren op updates...</string>

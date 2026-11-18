@@ -1,4 +1,4 @@
-val appVersionName = "3.6-bold7.1"
+val appVersionName = "3.6-bold7.2"
 
 plugins {
     alias(libs.plugins.android.application)
@@ -17,7 +17,7 @@ android {
         applicationId = "dev.bold7.camera.benos"
         minSdk = 26
         targetSdk = 37
-        versionCode = 27
+        versionCode = 28
         versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

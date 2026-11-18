@@ -1,0 +1,3 @@
+3.6-bold7.2
+- One photo per press of a shutter key (trackpad click, Enter, Space, camera and volume keys): a held key no longer shoots again every second.
+- No toast after a photo or a video.

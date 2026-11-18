@@ -79,7 +79,6 @@
     </string-array>
     <string name="no_app_to_open_video">Keine App zum Öffnen von Videos gefunden</string>
     <string name="no_app_to_open_url">Keine App zum Öffnen der URL gefunden</string>
-    <string name="photo_captured">Foto aufgenommen um %1$s</string>
 
     <string name="check_for_updates">Nach Updates suchen</string>
     <string name="checking_updates">Suche nach Updates...</string>

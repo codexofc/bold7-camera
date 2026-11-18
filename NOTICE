@@ -29,7 +29,12 @@ own after v3.6 (git log v3.6..):
   below it;
 - no proprietary library: the QR and barcode reader is ZXing's (core 3.5.3, Apache License 2.0,
   https://github.com/zxing/zxing) instead of Google's ML Kit; ML Kit's automatic zoom on a
-  far code goes with it, and its setting.
+  far code goes with it, and its setting;
+- 3.6-bold7.2: one photo per press of a shutter key (the trackpad's click, Enter, Space, the
+  camera and volume keys), all read in one place: a held key no longer shoots again every
+  second, and a second press of a key, or of another shutter key, before the first is released
+  does not shoot; no toast after a photo or a video, as on the BlackBerry 9900, which only shows
+  the picture taken.
 
 Third-party libraries in the APK, all under the Apache License 2.0: AndroidX (CameraX, AppCompat,
 Preference, Core, Lifecycle, Media3), Material Components for Android, Kotlin and its coroutines,

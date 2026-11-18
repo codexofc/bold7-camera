@@ -81,7 +81,6 @@
     </string-array>
     <string name="no_app_to_open_video">No app to open video</string>
     <string name="no_app_to_open_url">No app found to open URL</string>
-    <string name="photo_captured">Photo captured at %1$s</string>
 
     <string name="check_for_updates">Check for Updates</string>
     <string name="checking_updates">Checking for updates...</string>

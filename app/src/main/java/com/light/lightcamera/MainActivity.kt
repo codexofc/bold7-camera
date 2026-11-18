@@ -37,7 +37,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.light.lightcamera.databinding.ActivityMainBinding
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -65,6 +64,7 @@ open class MainActivity : AppCompatActivity() {
     private var lensFacing = CameraSelector.LENS_FACING_BACK
     private var screenAspectRatio = AspectRatio.RATIO_4_3
     private var lastPhotoTime = 0L
+    private val shutterKeys = ShutterKeys()
     private var isZoomSeekBarTouching = false
     // VideoCapture is bound only while filming: bound beside the photo, it turns CameraX to its
     // recording template, whose continuous video autofocus is slow on the Q25 and never settles
@@ -396,23 +396,6 @@ open class MainActivity : AppCompatActivity() {
         return darkness < 0.5
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (event?.repeatCount != 0) return true
-        return when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_ENTER,
-            KeyEvent.KEYCODE_NUMPAD_ENTER,
-            KeyEvent.KEYCODE_SPACE,
-            KeyEvent.KEYCODE_CAMERA,
-            KeyEvent.KEYCODE_VOLUME_UP,
-            KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                takePhoto()
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
-        }
-    }
-
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL) {
             val delta = event.getAxisValue(MotionEvent.AXIS_VSCROLL)
@@ -433,19 +416,20 @@ open class MainActivity : AppCompatActivity() {
         return super.onGenericMotionEvent(event)
     }
 
+    // Every shutter key, the trackpad's click and Enter included, goes through one place, before
+    // the views: one photo per press (ShutterKeys). The log line tells which key code arrived.
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_DPAD_CENTER,
-                KeyEvent.KEYCODE_ENTER,
-                KeyEvent.KEYCODE_NUMPAD_ENTER,
-                KeyEvent.KEYCODE_SPACE -> {
-                    takePhoto()
-                    return true
-                }
+        val down = event.action == KeyEvent.ACTION_DOWN
+        if (!down && event.action != KeyEvent.ACTION_UP) return super.dispatchKeyEvent(event)
+        return when (shutterKeys.onKey(event.keyCode, down, event.repeatCount)) {
+            ShutterKeys.Action.SHOOT -> {
+                Log.d("MainActivity", "Shutter key ${event.keyCode}")
+                takePhoto()
+                true
             }
+            ShutterKeys.Action.IGNORE -> true
+            ShutterKeys.Action.PASS -> super.dispatchKeyEvent(event)
         }
-        return super.dispatchKeyEvent(event)
     }
 
     private fun setupZoom() {
@@ -676,9 +660,7 @@ open class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(System.currentTimeMillis())
-                    val msg = getString(R.string.photo_captured, time)
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    // No toast: the 9900 shows the picture it took, nothing else (sim-365).
                     Log.d("MainActivity", "Photo capture succeeded: ${output.savedUri}")
                 }
             }
@@ -869,9 +851,7 @@ open class MainActivity : AppCompatActivity() {
                                 setResult(RESULT_OK, resultIntent)
                                 finish()
                             } else {
-                                val msg = "Video capture succeeded: ${recordEvent.outputResults.outputUri}"
-                                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                                Log.d("MainActivity", msg)
+                                Log.d("MainActivity", "Video capture succeeded: ${recordEvent.outputResults.outputUri}")
 
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
                                     setDataAndType(savedUri, "video/mp4")
